@@ -72,6 +72,11 @@ target_corridor = [
     (33.800, -113.285),
 ]
 
+# Field find: gossan-type iron-stained silica rock (user-reported location).
+finds = {
+    "Gossan float find\n(iron-oxide + silica, vuggy)": (33.78121, -113.27894),
+}
+
 # Buried-pluton geophysical footprint (schematic ellipse ~ centered on Blue Tank).
 pluton_center = (33.745, -113.300)
 pluton_rx, pluton_ry = 0.085, 0.075  # deg (schematic, ~ tens of km^2 footprint)
@@ -107,6 +112,16 @@ ax.plot([p[0] for p in tr], [p[1] for p in tr], color="#1b4f72", lw=3.0, zorder=
         label="_nolegend_")
 ax.text(*merc(-113.243, 33.905), "Eagle Eye\ndetachment fault\n(low-angle normal,\ntop-to-NE, ~21–14 Ma)",
         color="#1b4f72", fontsize=8.5, ha="left", va="top", fontweight="bold", zorder=6)
+
+# field find(s)
+for name, (lat, lon) in finds.items():
+    x, y = merc(lon, lat)
+    ax.scatter(x, y, s=320, marker="*", color="#f1c40f", edgecolor="k",
+               linewidth=1.3, zorder=12)
+    ax.annotate(name, xy=(x, y), xytext=merc(-113.345, 33.875),
+                color="#7d6608", fontsize=9, fontweight="bold", ha="center", va="center",
+                bbox=dict(boxstyle="round,pad=0.3", fc="#fef9e7", ec="#b7950b", alpha=0.92),
+                arrowprops=dict(arrowstyle="->", color="#7d6608", lw=1.6), zorder=12)
 
 # mines
 mcolors = {"main": "#117a65", "little": "#b9770e", "margin": "#566573"}
@@ -196,6 +211,8 @@ leg = [
            markeredgecolor="#1b2631", markersize=8, label="GNIS landmark (surveyed)"),
     Line2D([0], [0], marker="*", color="w", markerfacecolor="#7b241c",
            markeredgecolor="k", markersize=13, label="Range high point"),
+    Line2D([0], [0], marker="*", color="w", markerfacecolor="#f1c40f",
+           markeredgecolor="k", markersize=15, label="Gossan float find (field)"),
 ]
 ax.legend(handles=leg, loc="lower right", fontsize=7.8, framealpha=0.92,
           title="Legend", title_fontsize=8.5)
@@ -247,6 +264,10 @@ for name, (lat, lon, _r) in mines.items():
                f'<Point><coordinates>{lon},{lat},0</coordinates></Point></Placemark>')
 for name, (lat, lon, _k) in landmarks.items():
     kml.append(f'<Placemark><name>{name} (GNIS)</name>'
+               f'<Point><coordinates>{lon},{lat},0</coordinates></Point></Placemark>')
+for name, (lat, lon) in finds.items():
+    label = name.replace("\n", " ")
+    kml.append(f'<Placemark><name>FIELD FIND: {label}</name>'
                f'<Point><coordinates>{lon},{lat},0</coordinates></Point></Placemark>')
 kml.append('</Document></kml>')
 with open("research/harquahala_eagle_eye_target.kml", "w") as f:
