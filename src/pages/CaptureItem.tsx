@@ -4,7 +4,7 @@ import { saveItem, savePhoto, uid } from '../db'
 import { compressImage } from '../image'
 import type { Priority } from '../types'
 import { TRADES } from '../types'
-import { TopBar } from '../components/ui'
+import { DictateLabel, TopBar } from '../components/ui'
 
 export default function CaptureItem() {
   const { projectId } = useParams()
@@ -92,15 +92,14 @@ export default function CaptureItem() {
           )}
         </button>
 
-        <label>
-          What's the issue?
+        <div className="field">
+          <DictateLabel caption="What's the issue?" value={title} onChange={setTitle} />
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Cracked tile by entry"
-            autoFocus
+            placeholder="Speak or type — e.g. Cracked tile by entry"
           />
-        </label>
+        </div>
 
         <label>
           Location / area
@@ -132,15 +131,15 @@ export default function CaptureItem() {
           </label>
         </div>
 
-        <label>
-          Notes
+        <div className="field">
+          <DictateLabel caption="Notes" value={note} onChange={setNote} />
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Details, measurements, who's responsible…"
+            placeholder="Tap 🎤 Speak and describe it — details, measurements, who's responsible…"
             rows={3}
           />
-        </label>
+        </div>
 
         <div className="sticky-actions">
           <button type="button" className="btn ghost" onClick={() => navigate(-1)}>

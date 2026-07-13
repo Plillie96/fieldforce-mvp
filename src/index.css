@@ -430,6 +430,70 @@ textarea {
   gap: 12px;
 }
 
+/* Field with a dictation label (matches native <label> spacing) */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 30px;
+}
+.field-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #334155;
+}
+.mic-btn {
+  border: 1px solid var(--brand);
+  background: #eff6ff;
+  color: var(--brand);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  line-height: 1;
+}
+.mic-btn:active {
+  transform: scale(0.96);
+}
+.mic-btn.mic-on {
+  background: var(--high);
+  border-color: var(--high);
+  color: #fff;
+  animation: micpulse 1.3s ease-in-out infinite;
+}
+@keyframes micpulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(220, 38, 38, 0);
+  }
+}
+.mic-wave {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  animation: micblink 1s steps(2, start) infinite;
+}
+@keyframes micblink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
 .btn {
   font: inherit;
   font-weight: 650;

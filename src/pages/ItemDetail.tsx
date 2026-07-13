@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { deleteItem, getItem, saveItem } from '../db'
 import type { PunchItem, Priority, Status } from '../types'
 import { TRADES } from '../types'
-import { TopBar } from '../components/ui'
+import { DictateLabel, TopBar } from '../components/ui'
 import { usePhotoUrl } from '../usePhotoUrl'
 
 const STATUS_FLOW: Status[] = ['open', 'in_progress', 'done']
@@ -78,10 +78,14 @@ export default function ItemDetail() {
               setEditing(false)
             }}
           >
-            <label>
-              Issue
+            <div className="field">
+              <DictateLabel
+                caption="Issue"
+                value={item.title}
+                onChange={(v) => update({ title: v })}
+              />
               <input value={item.title} onChange={(e) => update({ title: e.target.value })} />
-            </label>
+            </div>
             <label>
               Location / area
               <input value={item.location} onChange={(e) => update({ location: e.target.value })} />
@@ -109,14 +113,14 @@ export default function ItemDetail() {
                 </select>
               </label>
             </div>
-            <label>
-              Notes
+            <div className="field">
+              <DictateLabel caption="Notes" value={item.note} onChange={(v) => update({ note: v })} />
               <textarea
                 value={item.note}
                 rows={4}
                 onChange={(e) => update({ note: e.target.value })}
               />
-            </label>
+            </div>
             <button type="submit" className="btn primary">
               Done editing
             </button>
