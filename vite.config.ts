@@ -2,9 +2,9 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// Served from a GitHub Pages project site: https://<user>.github.io/fieldforce-mvp/
-// If you later move to a custom domain or a user/org site, change this to '/'.
-const BASE = '/fieldforce-mvp/'
+// Served from the domain root (Vercel / custom domain). For a GitHub Pages
+// project site under a subpath, change this to '/fieldforce-mvp/'.
+const BASE = '/'
 
 export default defineConfig({
   base: BASE,

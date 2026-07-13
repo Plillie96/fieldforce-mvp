@@ -43,22 +43,18 @@ Open the dev URL on your phone (same network) or use your browser's device
 emulation. To exercise the camera, open it on an actual mobile device — the
 capture button uses the rear camera via `<input capture="environment">`.
 
-## Run it on your phone (GitHub Pages)
+## Run it on your phone (Vercel)
 
-The app auto-deploys to GitHub Pages via `.github/workflows/deploy.yml`.
+The repository is connected to Vercel, which builds and deploys on every push —
+production from `main`, and a preview URL for every pull request. Vercel runs its
+own build (`npm run build`), so no GitHub Actions or extra config is needed.
 
-**One-time setup:** in the repo, go to **Settings → Pages → Build and deployment
-→ Source** and select **GitHub Actions**. That's it — every push to `main` (and,
-for now, to the preview branch) builds and publishes the site.
+**On iPhone (Safari):** open the deployment URL → tap **Share** → **Add to Home
+Screen**. It launches full-screen like a native app, and the camera button uses
+the rear camera. Vercel's HTTPS is what makes the install + offline caching work.
 
-**Live URL:** `https://plillie96.github.io/fieldforce-mvp/`
-
-**On iPhone (Safari):** open the URL → tap **Share** → **Add to Home Screen**. It
-launches full-screen like a native app, and the camera button uses the rear
-camera. HTTPS from Pages is what makes the install + offline caching work.
-
-> The site is served from the `/fieldforce-mvp/` subpath, so `vite.config.ts`
-> sets `base` accordingly. On a custom domain or user/org site, change it to `/`.
+> Vercel serves from the domain root, so `base` is `/` in `vite.config.ts`. For a
+> GitHub Pages project site under a subpath, change it to `/fieldforce-mvp/`.
 
 ## Data & privacy
 
