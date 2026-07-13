@@ -2,9 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// Served from a GitHub Pages project site: https://<user>.github.io/fieldforce-mvp/
-// If you later move to a custom domain or a user/org site, change this to '/'.
-const BASE = '/fieldforce-mvp/'
+// Most hosts (Vercel, Netlify, a custom domain) serve from the root, so default
+// to '/'. GitHub Pages project sites live under a subpath, so the Pages build
+// opts in by setting GITHUB_PAGES=true.
+const BASE = process.env.GITHUB_PAGES === 'true' ? '/fieldforce-mvp/' : '/'
 
 export default defineConfig({
   base: BASE,
