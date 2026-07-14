@@ -1,7 +1,56 @@
 import { useNavigate } from 'react-router-dom'
 import type { Priority, Status } from '../types'
-import { PRIORITY_LABEL, STATUS_LABEL } from '../types'
+import { PRIORITIES, PRIORITY_LABEL, STATUS_LABEL, TRADES } from '../types'
 import { useDictation } from '../useDictation'
+
+export function PriorityChips({
+  value,
+  onChange,
+}: {
+  value: Priority
+  onChange: (p: Priority) => void
+}) {
+  return (
+    <div className="chips">
+      {PRIORITIES.map((p) => (
+        <button
+          key={p}
+          type="button"
+          className={`chip-pick prio-pick-${p} ${value === p ? 'picked' : ''}`}
+          onClick={() => onChange(p)}
+          aria-pressed={value === p}
+        >
+          <span className={`prio-dot prio-${p}`} aria-hidden="true" />
+          {PRIORITY_LABEL[p]}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function TradeChips({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (t: string) => void
+}) {
+  return (
+    <div className="chips chips-wrap">
+      {TRADES.map((t) => (
+        <button
+          key={t}
+          type="button"
+          className={`chip-pick ${value === t ? 'picked' : ''}`}
+          onClick={() => onChange(t)}
+          aria-pressed={value === t}
+        >
+          {t}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 export function TopBar({
   title,

@@ -31,3 +31,38 @@ export function usePhotoUrl(photoId?: string): string | undefined {
 
   return url
 }
+
+/**
+ * Resolves an ordered list of photo ids into object URLs, revoking them on
+ * cleanup. Preserves order and skips any that fail to load.
+ */
+export function usePhotoUrls(photoIds: string[]): string[] {
+  const [urls, setUrls] = useState<string[]>([])
+  const key = photoIds.join(',')
+
+  useEffect(() => {
+    let revoked = false
+    const created: string[] = []
+
+    if (photoIds.length === 0) {
+      setUrls([])
+      return
+    }
+
+    Promise.all(photoIds.map((id) => getPhotoBlob(id))).then((blobs) => {
+      if (revoked) return
+      for (const blob of blobs) {
+        if (blob) created.push(URL.createObjectURL(blob))
+      }
+      setUrls(created)
+    })
+
+    return () => {
+      revoked = true
+      for (const u of created) URL.revokeObjectURL(u)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+
+  return urls
+}

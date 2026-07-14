@@ -1,32 +1,85 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getProject, listItems } from '../db'
-import type { Project, PunchItem } from '../types'
-import { PRIORITY_LABEL, STATUS_LABEL } from '../types'
+import { getProject, listItems, loadSettings } from '../db'
+import { downloadCsv } from '../csv'
+import { formatCoords, mapsLink } from '../geo'
+import type { Priority, Project, PunchItem, Settings } from '../types'
+import { PRIORITY_LABEL, STATUS_LABEL, TRADES } from '../types'
 import { TopBar } from '../components/ui'
-import { usePhotoUrl } from '../usePhotoUrl'
+import { usePhotoUrls } from '../usePhotoUrl'
 
-const PRIORITY_RANK: Record<PunchItem['priority'], number> = { high: 0, medium: 1, low: 2 }
+const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 }
+type GroupBy = 'area' | 'trade' | 'status'
+
+function sortItems(items: PunchItem[]): PunchItem[] {
+  return [...items].sort((a, b) => {
+    if (PRIORITY_RANK[a.priority] !== PRIORITY_RANK[b.priority])
+      return PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]
+    return a.createdAt - b.createdAt
+  })
+}
+
+function buildGroups(items: PunchItem[], by: GroupBy): Array<{ key: string; items: PunchItem[] }> {
+  const map = new Map<string, PunchItem[]>()
+  for (const item of items) {
+    const key =
+      by === 'area'
+        ? item.location.trim() || 'Unspecified area'
+        : by === 'trade'
+          ? item.trade
+          : STATUS_LABEL[item.status]
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(item)
+  }
+  const keys = Array.from(map.keys())
+  if (by === 'trade') keys.sort((a, b) => TRADES.indexOf(a as never) - TRADES.indexOf(b as never))
+  else if (by === 'status') keys.sort() // In progress, Open, Done — alpha is fine enough
+  else keys.sort((a, b) => a.localeCompare(b))
+  return keys.map((key) => ({ key, items: sortItems(map.get(key)!) }))
+}
 
 function ReportRow({ item, index }: { item: PunchItem; index: number }) {
-  const url = usePhotoUrl(item.photoId)
+  const urls = usePhotoUrls(item.photoIds)
   return (
     <div className="report-item">
-      <div className="report-photo">
-        {url ? <img src={url} alt="" /> : <div className="report-nophoto">No photo</div>}
+      <div className="report-photos">
+        {urls.length ? (
+          urls.slice(0, 3).map((u, i) => <img key={i} src={u} alt="" />)
+        ) : (
+          <div className="report-nophoto">No photo</div>
+        )}
       </div>
       <div className="report-item-body">
         <div className="report-item-head">
-          <span className="report-num">#{index + 1}</span>
+          <span className="report-num">#{index}</span>
           <strong>{item.title || 'Untitled item'}</strong>
           <span className={`report-tag prio-${item.priority}`}>{PRIORITY_LABEL[item.priority]}</span>
           <span className="report-tag report-status">{STATUS_LABEL[item.status]}</span>
         </div>
         <div className="report-item-meta">
           {[item.location, item.trade].filter(Boolean).join(' · ') || 'No location'}
+          {item.geo && (
+            <>
+              {' · '}
+              <a href={mapsLink(item.geo)} target="_blank" rel="noreferrer">
+                📍 {formatCoords(item.geo)}
+              </a>
+            </>
+          )}
+          {' · '}
+          {new Date(item.createdAt).toLocaleDateString()}
         </div>
         {item.note && <p className="report-item-note">{item.note}</p>}
       </div>
+    </div>
+  )
+}
+
+function StatTile({ label, value, tone }: { label: string; value: number; tone?: string }) {
+  return (
+    <div className={`stat-tile ${tone ? 'tone-' + tone : ''}`}>
+      <div className="stat-value">{value}</div>
+      <div className="stat-label">{label}</div>
     </div>
   )
 }
@@ -35,29 +88,43 @@ export default function Report() {
   const { projectId } = useParams()
   const [project, setProject] = useState<Project>()
   const [items, setItems] = useState<PunchItem[]>([])
+  const [settings, setSettings] = useState<Settings>({ companyName: '', logo: '' })
+  const [groupBy, setGroupBy] = useState<GroupBy>('area')
 
   useEffect(() => {
     if (!projectId) return
+    setSettings(loadSettings())
     Promise.all([getProject(projectId), listItems(projectId)]).then(([p, i]) => {
       setProject(p)
-      setItems(
-        [...i].sort((a, b) => {
-          if (PRIORITY_RANK[a.priority] !== PRIORITY_RANK[b.priority])
-            return PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]
-          return a.createdAt - b.createdAt
-        }),
-      )
+      setItems(i)
     })
   }, [projectId])
 
+  const stats = useMemo(() => {
+    const done = items.filter((i) => i.status === 'done').length
+    return {
+      total: items.length,
+      open: items.filter((i) => i.status === 'open').length,
+      in_progress: items.filter((i) => i.status === 'in_progress').length,
+      done,
+      pct: items.length ? Math.round((done / items.length) * 100) : 0,
+      high: items.filter((i) => i.priority === 'high').length,
+      medium: items.filter((i) => i.priority === 'medium').length,
+      low: items.filter((i) => i.priority === 'low').length,
+    }
+  }, [items])
+
+  const groups = useMemo(() => buildGroups(items, groupBy), [items, groupBy])
+
   if (!project) return <div className="page" />
 
-  const open = items.filter((i) => i.status !== 'done').length
   const generated = new Date().toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   })
+
+  let counter = 0
 
   return (
     <div className="page report-page">
@@ -71,13 +138,34 @@ export default function Report() {
             </button>
           }
         />
+        <div className="report-controls">
+          <div className="seg-group" role="group" aria-label="Group by">
+            <span className="seg-caption">Group by</span>
+            {(['area', 'trade', 'status'] as GroupBy[]).map((g) => (
+              <button
+                key={g}
+                className={`seg-btn ${groupBy === g ? 'active' : ''}`}
+                onClick={() => setGroupBy(g)}
+              >
+                {g[0].toUpperCase() + g.slice(1)}
+              </button>
+            ))}
+          </div>
+          <button className="btn ghost small" onClick={() => downloadCsv(project, items)}>
+            ⬇ CSV
+          </button>
+        </div>
       </div>
 
       <div className="report-sheet">
         <div className="report-header">
-          <div>
-            <h1>{project.name}</h1>
-            {project.address && <p className="report-address">{project.address}</p>}
+          <div className="report-brand">
+            {settings.logo && <img className="report-logo" src={settings.logo} alt="" />}
+            <div>
+              {settings.companyName && <div className="report-company">{settings.companyName}</div>}
+              <h1>{project.name}</h1>
+              {project.address && <p className="report-address">{project.address}</p>}
+            </div>
           </div>
           <div className="report-header-right">
             <div className="report-title-word">PUNCH LIST</div>
@@ -85,29 +173,56 @@ export default function Report() {
           </div>
         </div>
 
-        <div className="report-summary">
-          <span>
-            <strong>{items.length}</strong> items
-          </span>
-          <span>
-            <strong>{open}</strong> open
-          </span>
-          <span>
-            <strong>{items.length - open}</strong> done
-          </span>
+        <div className="report-dashboard">
+          <StatTile label="Items" value={stats.total} />
+          <StatTile label="Open" value={stats.open} tone="open" />
+          <StatTile label="In progress" value={stats.in_progress} tone="prog" />
+          <StatTile label="Done" value={stats.done} tone="done" />
+          <div className="stat-tile tone-pct">
+            <div className="stat-value">{stats.pct}%</div>
+            <div className="stat-label">Complete</div>
+            <div className="pct-bar">
+              <span style={{ width: `${stats.pct}%` }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="report-prio-row">
+          <span className="report-tag prio-high">{stats.high} High</span>
+          <span className="report-tag prio-medium">{stats.medium} Medium</span>
+          <span className="report-tag prio-low">{stats.low} Low</span>
         </div>
 
         {items.length === 0 ? (
           <p className="muted">No items captured yet.</p>
         ) : (
-          <div className="report-list">
-            {items.map((item, idx) => (
-              <ReportRow key={item.id} item={item} index={idx} />
-            ))}
-          </div>
+          groups.map((group) => (
+            <section className="report-group" key={group.key}>
+              <h2 className="report-group-head">
+                {group.key} <span>{group.items.length}</span>
+              </h2>
+              {group.items.map((item) => {
+                counter += 1
+                return <ReportRow key={item.id} item={item} index={counter} />
+              })}
+            </section>
+          ))
         )}
 
-        <div className="report-footer">Generated with Field Punch</div>
+        <div className="report-signoff">
+          <div className="signoff-line">
+            <span className="signoff-slot" />
+            <span className="signoff-label">Contractor — signature &amp; date</span>
+          </div>
+          <div className="signoff-line">
+            <span className="signoff-slot" />
+            <span className="signoff-label">Owner / GC — signature &amp; date</span>
+          </div>
+        </div>
+
+        <div className="report-footer">
+          {settings.companyName ? `${settings.companyName} · ` : ''}Generated with Field Punch
+        </div>
       </div>
     </div>
   )

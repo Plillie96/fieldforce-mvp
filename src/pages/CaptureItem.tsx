@@ -1,62 +1,141 @@
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { saveItem, savePhoto, uid } from '../db'
+import { loadCaptureMemory, saveCaptureMemory, saveItem, savePhoto, uid } from '../db'
 import { compressImage } from '../image'
-import type { Priority } from '../types'
-import { TRADES } from '../types'
-import { DictateLabel, TopBar } from '../components/ui'
+import { getCurrentLocation, reverseGeocode } from '../geo'
+import { parseSpokenItem } from '../parse'
+import type { Geo, Priority } from '../types'
+import { DictateLabel, PriorityChips, TopBar, TradeChips } from '../components/ui'
+import { useDictation } from '../useDictation'
+
+interface DraftPhoto {
+  id: string
+  blob: Blob
+  url: string
+}
 
 export default function CaptureItem() {
   const { projectId } = useParams()
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const [previewUrl, setPreviewUrl] = useState<string>()
-  const [photoBlob, setPhotoBlob] = useState<Blob>()
+  const memory = useMemo(
+    () => (projectId ? loadCaptureMemory(projectId) : { location: '', trade: 'General' }),
+    [projectId],
+  )
+
+  const [photos, setPhotos] = useState<DraftPhoto[]>([])
   const [title, setTitle] = useState('')
   const [note, setNote] = useState('')
-  const [location, setLocation] = useState('')
-  const [trade, setTrade] = useState<string>('General')
+  const [location, setLocation] = useState(memory.location)
+  const [trade, setTrade] = useState(memory.trade)
   const [priority, setPriority] = useState<Priority>('medium')
+  const [geo, setGeo] = useState<Geo | null>(null)
+  const [geoStatus, setGeoStatus] = useState<'locating' | 'ok' | 'off'>('locating')
   const [saving, setSaving] = useState(false)
 
+  // Voice: speak a whole item, parse into fields.
+  const speech = useDictation()
+  const [speakMode, setSpeakMode] = useState(false)
+  const [liveText, setLiveText] = useState('')
+  const wasListening = useRef(false)
+
+  // One-shot GPS on open; reverse-geocode to prefill location if empty.
+  useEffect(() => {
+    let cancelled = false
+    getCurrentLocation().then(async (g) => {
+      if (cancelled) return
+      if (!g) {
+        setGeoStatus('off')
+        return
+      }
+      setGeo(g)
+      setGeoStatus('ok')
+      const place = await reverseGeocode(g)
+      if (!cancelled && place) setLocation((cur) => cur || place)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // When speech recognition ends, apply the parsed sentence.
+  useEffect(() => {
+    if (wasListening.current && !speech.listening && speakMode) {
+      if (liveText.trim()) applyParsed(liveText)
+      setSpeakMode(false)
+    }
+    wasListening.current = speech.listening
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speech.listening, speakMode, liveText])
+
+  useEffect(() => {
+    return () => photos.forEach((p) => URL.revokeObjectURL(p.url))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function applyParsed(text: string) {
+    const parsed = parseSpokenItem(text)
+    setTitle(parsed.title)
+    if (parsed.trade) setTrade(parsed.trade)
+    if (parsed.priority) setPriority(parsed.priority)
+    if (parsed.location) setLocation(parsed.location)
+  }
+
+  function toggleSpeakItem() {
+    if (speech.listening) {
+      speech.stop()
+      return
+    }
+    setLiveText('')
+    setSpeakMode(true)
+    speech.start((t) => setLiveText(t))
+  }
+
   async function onPhotoPicked(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const blob = await compressImage(file)
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
-    setPhotoBlob(blob)
-    setPreviewUrl(URL.createObjectURL(blob))
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    for (const file of files) {
+      const blob = await compressImage(file)
+      const id = uid()
+      setPhotos((prev) => [...prev, { id, blob, url: URL.createObjectURL(blob) }])
+    }
+  }
+
+  function removePhoto(id: string) {
+    setPhotos((prev) => {
+      const gone = prev.find((p) => p.id === id)
+      if (gone) URL.revokeObjectURL(gone.url)
+      return prev.filter((p) => p.id !== id)
+    })
   }
 
   async function onSave(e: React.FormEvent) {
     e.preventDefault()
     if (!projectId || saving) return
-    if (!title.trim() && !photoBlob) {
-      alert('Add a photo or a title first.')
+    if (!title.trim() && photos.length === 0) {
+      alert('Add a photo or say/enter what the issue is first.')
       return
     }
     setSaving(true)
     const now = Date.now()
-    let photoId: string | undefined
-    if (photoBlob) {
-      photoId = uid()
-      await savePhoto(photoId, photoBlob)
-    }
+    for (const p of photos) await savePhoto(p.id, p.blob)
     await saveItem({
       id: uid(),
       projectId,
       title: title.trim(),
       note: note.trim(),
-      photoId,
+      photoIds: photos.map((p) => p.id),
       location: location.trim(),
       trade,
       priority,
       status: 'open',
+      geo: geo ?? undefined,
       createdAt: now,
       updatedAt: now,
     })
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    saveCaptureMemory(projectId, { location: location.trim(), trade })
+    photos.forEach((p) => URL.revokeObjectURL(p.url))
     navigate(`/project/${projectId}`, { replace: true })
   }
 
@@ -74,23 +153,65 @@ export default function CaptureItem() {
           onChange={onPhotoPicked}
         />
 
-        <button
-          type="button"
-          className={`photo-drop ${previewUrl ? 'has-photo' : ''}`}
-          onClick={() => fileRef.current?.click()}
-        >
-          {previewUrl ? (
-            <>
-              <img src={previewUrl} alt="Captured" />
-              <span className="photo-retake">Tap to retake</span>
-            </>
-          ) : (
+        {/* Photos */}
+        {photos.length === 0 ? (
+          <button
+            type="button"
+            className="photo-drop"
+            onClick={() => fileRef.current?.click()}
+          >
             <span className="photo-cta">
               <span className="photo-cam">📷</span>
               Take photo
             </span>
-          )}
-        </button>
+          </button>
+        ) : (
+          <div className="photo-strip">
+            {photos.map((p) => (
+              <div className="photo-tile" key={p.id}>
+                <img src={p.url} alt="" />
+                <button
+                  type="button"
+                  className="photo-remove"
+                  aria-label="Remove photo"
+                  onClick={() => removePhoto(p.id)}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="photo-add"
+              onClick={() => fileRef.current?.click()}
+              aria-label="Add another photo"
+            >
+              ＋
+              <span>Add</span>
+            </button>
+          </div>
+        )}
+
+        {/* Speak-an-item */}
+        {speech.supported && (
+          <button
+            type="button"
+            className={`speak-item ${speech.listening ? 'on' : ''}`}
+            onClick={toggleSpeakItem}
+          >
+            {speech.listening ? (
+              <>
+                <span className="mic-wave" aria-hidden="true" />
+                Listening… tap to finish
+              </>
+            ) : (
+              <>🎙️ Speak the whole item</>
+            )}
+          </button>
+        )}
+        {speakMode && speech.listening && (
+          <p className="speak-live">{liveText || 'e.g. "cracked tile, high priority, in the kitchen"'}</p>
+        )}
 
         <div className="field">
           <DictateLabel caption="What's the issue?" value={title} onChange={setTitle} />
@@ -101,34 +222,30 @@ export default function CaptureItem() {
           />
         </div>
 
-        <label>
-          Location / area
+        <div className="field">
+          <div className="label-row">
+            <span className="field-label">Location / area</span>
+            <span className={`geo-chip geo-${geoStatus}`}>
+              {geoStatus === 'locating' && '📍 locating…'}
+              {geoStatus === 'ok' && '📍 GPS tagged'}
+              {geoStatus === 'off' && '📍 no GPS'}
+            </span>
+          </div>
           <input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. Kitchen, Unit 4B"
           />
-        </label>
+        </div>
 
-        <div className="grid-2">
-          <label>
-            Trade
-            <select value={trade} onChange={(e) => setTrade(e.target.value)}>
-              {TRADES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Priority
-            <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </label>
+        <div className="field">
+          <span className="field-label">Trade</span>
+          <TradeChips value={trade} onChange={setTrade} />
+        </div>
+
+        <div className="field">
+          <span className="field-label">Priority</span>
+          <PriorityChips value={priority} onChange={setPriority} />
         </div>
 
         <div className="field">
