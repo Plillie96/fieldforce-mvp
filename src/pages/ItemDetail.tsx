@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { deleteItem, getItem, saveItem } from '../db'
+import { deleteItem, deletePhoto, getItem, savePhoto, saveItem, uid } from '../db'
+import { compressImage } from '../image'
+import { formatCoords, mapsLink } from '../geo'
 import type { PunchItem, Priority, Status } from '../types'
-import { TRADES } from '../types'
-import { DictateLabel, TopBar } from '../components/ui'
-import { usePhotoUrl } from '../usePhotoUrl'
+import { DictateLabel, PriorityChips, TopBar, TradeChips } from '../components/ui'
+import { usePhotoUrls } from '../usePhotoUrl'
 
 const STATUS_FLOW: Status[] = ['open', 'in_progress', 'done']
 
@@ -13,7 +14,8 @@ export default function ItemDetail() {
   const navigate = useNavigate()
   const [item, setItem] = useState<PunchItem>()
   const [editing, setEditing] = useState(false)
-  const photoUrl = usePhotoUrl(item?.photoId)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const photoUrls = usePhotoUrls(item?.photoIds ?? [])
 
   useEffect(() => {
     if (!itemId) return
@@ -28,6 +30,26 @@ export default function ItemDetail() {
     const next = { ...item, ...patch, updatedAt: Date.now() }
     setItem(next)
     await saveItem(next)
+  }
+
+  async function onAddPhotos(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!item) return
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    const newIds: string[] = []
+    for (const file of files) {
+      const blob = await compressImage(file)
+      const id = uid()
+      await savePhoto(id, blob)
+      newIds.push(id)
+    }
+    if (newIds.length) await update({ photoIds: [...item.photoIds, ...newIds] })
+  }
+
+  async function removePhoto(id: string) {
+    if (!item) return
+    await update({ photoIds: item.photoIds.filter((p) => p !== id) })
+    await deletePhoto(id)
   }
 
   async function onDelete() {
@@ -52,10 +74,38 @@ export default function ItemDetail() {
       />
 
       <div className="page-body">
-        {photoUrl && (
-          <div className="detail-photo">
-            <img src={photoUrl} alt={item.title} />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          hidden
+          onChange={onAddPhotos}
+        />
+
+        {photoUrls.length > 0 && (
+          <div className="detail-gallery">
+            {photoUrls.map((url, i) => (
+              <div className="detail-photo" key={i}>
+                <img src={url} alt={`${item.title} photo ${i + 1}`} />
+                {editing && (
+                  <button
+                    type="button"
+                    className="photo-remove"
+                    aria-label="Remove photo"
+                    onClick={() => removePhoto(item.photoIds[i])}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
+        )}
+        {editing && (
+          <button type="button" className="btn ghost full" onClick={() => fileRef.current?.click()}>
+            📷 Add photo
+          </button>
         )}
 
         <div className="status-switch" role="tablist" aria-label="Status">
@@ -86,32 +136,20 @@ export default function ItemDetail() {
               />
               <input value={item.title} onChange={(e) => update({ title: e.target.value })} />
             </div>
-            <label>
-              Location / area
+            <div className="field">
+              <span className="field-label">Location / area</span>
               <input value={item.location} onChange={(e) => update({ location: e.target.value })} />
-            </label>
-            <div className="grid-2">
-              <label>
-                Trade
-                <select value={item.trade} onChange={(e) => update({ trade: e.target.value })}>
-                  {TRADES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Priority
-                <select
-                  value={item.priority}
-                  onChange={(e) => update({ priority: e.target.value as Priority })}
-                >
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </label>
+            </div>
+            <div className="field">
+              <span className="field-label">Trade</span>
+              <TradeChips value={item.trade} onChange={(t) => update({ trade: t })} />
+            </div>
+            <div className="field">
+              <span className="field-label">Priority</span>
+              <PriorityChips
+                value={item.priority}
+                onChange={(p: Priority) => update({ priority: p })}
+              />
             </div>
             <div className="field">
               <DictateLabel caption="Notes" value={item.note} onChange={(v) => update({ note: v })} />
@@ -145,6 +183,17 @@ export default function ItemDetail() {
               </div>
             </dl>
             {item.note && <p className="detail-note">{item.note}</p>}
+            <p className="detail-stamp">
+              Captured {new Date(item.createdAt).toLocaleString()}
+              {item.geo && (
+                <>
+                  {' · '}
+                  <a href={mapsLink(item.geo)} target="_blank" rel="noreferrer">
+                    📍 {formatCoords(item.geo)}
+                  </a>
+                </>
+              )}
+            </p>
             <button className="btn ghost full" onClick={() => setEditing(true)}>
               ✎ Edit details
             </button>

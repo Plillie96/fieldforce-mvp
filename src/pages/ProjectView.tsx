@@ -8,10 +8,11 @@ import { usePhotoUrl } from '../usePhotoUrl'
 const PRIORITY_RANK: Record<PunchItem['priority'], number> = { high: 0, medium: 1, low: 2 }
 
 function ItemThumb({ item }: { item: PunchItem }) {
-  const url = usePhotoUrl(item.photoId)
+  const url = usePhotoUrl(item.photoIds[0])
   return (
     <div className="thumb">
       {url ? <img src={url} alt="" /> : <span className="thumb-placeholder">📷</span>}
+      {item.photoIds.length > 1 && <span className="thumb-count">{item.photoIds.length}</span>}
     </div>
   )
 }

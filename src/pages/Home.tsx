@@ -55,10 +55,13 @@ export default function Home() {
     <div className="page">
       <header className="hero">
         <div className="hero-mark">◉</div>
-        <div>
+        <div className="hero-titles">
           <h1>Field Punch</h1>
-          <p>Walk the site. Snap, note, done.</p>
+          <p>Walk the site. Snap, speak, done.</p>
         </div>
+        <Link to="/settings" className="hero-gear" aria-label="Company & report settings">
+          ⚙
+        </Link>
       </header>
 
       <div className="page-body">
