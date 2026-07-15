@@ -4,12 +4,13 @@ import { getProject, listItems, loadSettings } from '../db'
 import { downloadCsv } from '../csv'
 import { formatCoords, mapsLink } from '../geo'
 import type { Priority, Project, PunchItem, Settings } from '../types'
-import { PRIORITY_LABEL, STATUS_LABEL, TRADES } from '../types'
+import { PRIORITY_LABEL, STATUS_LABEL, TRADES, isOverdue } from '../types'
 import { TopBar } from '../components/ui'
 import { usePhotoUrls } from '../usePhotoUrl'
 
 const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 }
-type GroupBy = 'area' | 'trade' | 'status'
+type GroupBy = 'area' | 'trade' | 'status' | 'assignee'
+const GROUP_LABEL: Record<GroupBy, string> = { area: 'Area', trade: 'Trade', status: 'Status', assignee: 'Sub' }
 
 function sortItems(items: PunchItem[]): PunchItem[] {
   return [...items].sort((a, b) => {
@@ -27,7 +28,9 @@ function buildGroups(items: PunchItem[], by: GroupBy): Array<{ key: string; item
         ? item.location.trim() || 'Unspecified area'
         : by === 'trade'
           ? item.trade
-          : STATUS_LABEL[item.status]
+          : by === 'assignee'
+            ? item.assignee.trim() || 'Unassigned'
+            : STATUS_LABEL[item.status]
     if (!map.has(key)) map.set(key, [])
     map.get(key)!.push(item)
   }
@@ -57,7 +60,14 @@ function ReportRow({ item, index }: { item: PunchItem; index: number }) {
           <span className="report-tag report-status">{STATUS_LABEL[item.status]}</span>
         </div>
         <div className="report-item-meta">
-          {[item.location, item.trade].filter(Boolean).join(' · ') || 'No location'}
+          {[item.location, item.trade, item.assignee].filter(Boolean).join(' · ') || 'No location'}
+          {item.dueDate && (
+            <span className={isOverdue(item) ? 'due-overdue' : ''}>
+              {' · due '}
+              {new Date(item.dueDate).toLocaleDateString()}
+              {isOverdue(item) && ' (overdue)'}
+            </span>
+          )}
           {item.geo && (
             <>
               {' · '}
@@ -66,10 +76,11 @@ function ReportRow({ item, index }: { item: PunchItem; index: number }) {
               </a>
             </>
           )}
-          {' · '}
-          {new Date(item.createdAt).toLocaleDateString()}
         </div>
         {item.note && <p className="report-item-note">{item.note}</p>}
+        {item.closePhotoIds.length > 0 && (
+          <div className="report-verified">✅ Verified complete ({item.closePhotoIds.length} photo{item.closePhotoIds.length > 1 ? 's' : ''})</div>
+        )}
       </div>
     </div>
   )
@@ -141,13 +152,13 @@ export default function Report() {
         <div className="report-controls">
           <div className="seg-group" role="group" aria-label="Group by">
             <span className="seg-caption">Group by</span>
-            {(['area', 'trade', 'status'] as GroupBy[]).map((g) => (
+            {(['area', 'trade', 'status', 'assignee'] as GroupBy[]).map((g) => (
               <button
                 key={g}
                 className={`seg-btn ${groupBy === g ? 'active' : ''}`}
                 onClick={() => setGroupBy(g)}
               >
-                {g[0].toUpperCase() + g.slice(1)}
+                {GROUP_LABEL[g]}
               </button>
             ))}
           </div>

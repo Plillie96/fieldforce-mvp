@@ -1,9 +1,24 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { deleteProject, getProject, listItems } from '../db'
+import { deleteProject, exportProject, getProject, listItems } from '../db'
 import type { Project, PunchItem, Status } from '../types'
+import { isOverdue } from '../types'
 import { EmptyState, PriorityDot, StatusBadge, TopBar } from '../components/ui'
 import { usePhotoUrl } from '../usePhotoUrl'
+
+async function downloadProject(projectId: string, name: string) {
+  const bundle = await exportProject(projectId)
+  const blob = new Blob([JSON.stringify(bundle)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  const safe = name.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'project'
+  a.href = url
+  a.download = `${safe}.fieldpunch.json`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
 
 const PRIORITY_RANK: Record<PunchItem['priority'], number> = { high: 0, medium: 1, low: 2 }
 
@@ -100,9 +115,17 @@ export default function ProjectView() {
 
       <div className="page-body">
         {items.length > 0 && (
-          <Link to={`/project/${project.id}/report`} className="report-link">
-            📄 View / export punch list report
-          </Link>
+          <div className="project-actions">
+            <Link to={`/project/${project.id}/dashboard`} className="action-tile">
+              📊 Dashboard
+            </Link>
+            <Link to={`/project/${project.id}/report`} className="action-tile">
+              📄 Report
+            </Link>
+            <button className="action-tile" onClick={() => downloadProject(project.id, project.name)}>
+              ⬆ Export
+            </button>
+          </div>
         )}
 
         {visible.length === 0 ? (
@@ -130,9 +153,13 @@ export default function ProjectView() {
                       <PriorityDot priority={item.priority} />
                     </div>
                     <p className="muted item-meta">
-                      {[item.location, item.trade].filter(Boolean).join(' · ') || 'No location'}
+                      {[item.location, item.trade, item.assignee].filter(Boolean).join(' · ') ||
+                        'No location'}
                     </p>
-                    <StatusBadge status={item.status} />
+                    <div className="item-badges">
+                      <StatusBadge status={item.status} />
+                      {isOverdue(item) && <span className="badge badge-overdue">Overdue</span>}
+                    </div>
                   </div>
                 </Link>
               </li>

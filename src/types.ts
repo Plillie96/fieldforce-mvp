@@ -14,6 +14,11 @@ export interface Geo {
   accuracy?: number
 }
 
+export interface StatusChange {
+  status: Status
+  at: number
+}
+
 export interface PunchItem {
   id: string
   projectId: string
@@ -21,14 +26,36 @@ export interface PunchItem {
   note: string
   /** Keys into the photos store; an item can have several photos (wide + close-up). */
   photoIds: string[]
+  /** Completion / verification photos captured when the item was closed. */
+  closePhotoIds: string[]
   location: string
   trade: string
   priority: Priority
   status: Status
+  /** Subcontractor / company responsible, and where to email them. */
+  assignee: string
+  assigneeEmail: string
+  /** Optional due date (ms timestamp, date granularity). */
+  dueDate?: number
+  /** Set when the item is first marked done. */
+  closedAt?: number
+  /** Audit trail of status transitions. */
+  statusHistory: StatusChange[]
   /** Where the item was captured, if location was available. */
   geo?: Geo
   createdAt: number
   updatedAt: number
+}
+
+/** True when an open item's due date has passed. */
+export function isOverdue(item: PunchItem): boolean {
+  return item.status !== 'done' && item.dueDate !== undefined && item.dueDate < Date.now()
+}
+
+/** Days an item took to close (or has been open), rounded. */
+export function daysOpen(item: PunchItem): number {
+  const end = item.closedAt ?? Date.now()
+  return Math.max(0, Math.round((end - item.createdAt) / 86400000))
 }
 
 export interface StoredPhoto {

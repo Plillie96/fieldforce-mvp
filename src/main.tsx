@@ -7,6 +7,7 @@ import ProjectView from './pages/ProjectView'
 import CaptureItem from './pages/CaptureItem'
 import ItemDetail from './pages/ItemDetail'
 import Report from './pages/Report'
+import Dashboard from './pages/Dashboard'
 import SettingsPage from './pages/Settings'
 import './index.css'
 
@@ -20,6 +21,7 @@ const router = createHashRouter([
       { path: 'project/:projectId', element: <ProjectView /> },
       { path: 'project/:projectId/capture', element: <CaptureItem /> },
       { path: 'project/:projectId/item/:itemId', element: <ItemDetail /> },
+      { path: 'project/:projectId/dashboard', element: <Dashboard /> },
       { path: 'project/:projectId/report', element: <Report /> },
     ],
   },
