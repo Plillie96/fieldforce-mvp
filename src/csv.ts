@@ -1,5 +1,5 @@
 import type { Project, PunchItem } from './types'
-import { PRIORITY_LABEL, STATUS_LABEL } from './types'
+import { PRIORITY_LABEL, STATUS_LABEL, daysOpen } from './types'
 import { formatCoords } from './geo'
 
 function esc(value: string): string {
@@ -15,12 +15,17 @@ export function itemsToCsv(items: PunchItem[]): string {
     'Title',
     'Location',
     'Trade',
+    'Assignee',
     'Priority',
     'Status',
+    'Due',
+    'Days open/to close',
     'Notes',
     'Photos',
+    'Verified',
     'Coordinates',
     'Created',
+    'Closed',
   ]
   const rows = items.map((item, i) =>
     [
@@ -28,12 +33,17 @@ export function itemsToCsv(items: PunchItem[]): string {
       item.title,
       item.location,
       item.trade,
+      item.assignee,
       PRIORITY_LABEL[item.priority],
       STATUS_LABEL[item.status],
+      item.dueDate ? new Date(item.dueDate).toLocaleDateString() : '',
+      String(daysOpen(item)),
       item.note,
       String(item.photoIds.length),
+      item.closePhotoIds.length > 0 ? 'yes' : '',
       item.geo ? formatCoords(item.geo) : '',
       new Date(item.createdAt).toISOString(),
+      item.closedAt ? new Date(item.closedAt).toISOString() : '',
     ]
       .map(esc)
       .join(','),

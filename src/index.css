@@ -1199,6 +1199,214 @@ textarea {
   color: var(--muted);
 }
 
+/* ---- Project actions row ---- */
+.project-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.action-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--brand);
+  font-weight: 650;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.action-tile:active {
+  transform: scale(0.98);
+}
+
+/* ---- Badges: overdue ---- */
+.item-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.badge-overdue {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.due-overdue {
+  color: var(--high);
+  font-weight: 600;
+}
+
+/* ---- Completion photos + audit ---- */
+.close-photos {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 14px;
+}
+.close-photos-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 650;
+  font-size: 14px;
+  color: #15803d;
+  margin-bottom: 8px;
+}
+.close-hint {
+  font-size: 13px;
+}
+.audit {
+  margin: 4px 0 16px;
+  font-size: 13.5px;
+}
+.audit summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 600;
+}
+.audit ul {
+  list-style: none;
+  padding: 8px 0 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.audit li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+/* ---- Dashboard ---- */
+.dash-kpis {
+  border-bottom: none;
+  padding-top: 4px;
+}
+.dash-pct {
+  margin: 4px 0 18px;
+}
+.dash-pct-head {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 650;
+  margin-bottom: 6px;
+}
+.pct-bar.big {
+  height: 10px;
+}
+.dash-section {
+  margin-bottom: 22px;
+}
+.dash-section h3 {
+  font-size: 15px;
+  margin: 0 0 10px;
+}
+.dash-section h3 .muted {
+  font-weight: 400;
+  font-size: 13px;
+}
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.bar-label {
+  width: 92px;
+  flex-shrink: 0;
+  font-size: 13.5px;
+  font-weight: 550;
+}
+.bar-track {
+  flex: 1;
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+  border-radius: 999px;
+}
+.bar-num {
+  width: 52px;
+  text-align: right;
+  font-size: 13px;
+  color: var(--muted);
+}
+.bar-num strong {
+  color: var(--ink);
+}
+.sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.sub-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sub-main .muted {
+  font-size: 13px;
+}
+.aging-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+}
+.aging-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aging-days {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* ---- Home import ---- */
+.home-import {
+  text-align: center;
+  padding: 8px 16px 24px;
+}
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px;
+}
+
+/* ---- Report verified badge ---- */
+.report-verified {
+  margin-top: 6px;
+  font-size: 12.5px;
+  font-weight: 650;
+  color: #15803d;
+}
+
 /* ---- Print ---- */
 @media print {
   body {

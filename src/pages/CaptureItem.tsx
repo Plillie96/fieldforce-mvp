@@ -20,7 +20,10 @@ export default function CaptureItem() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   const memory = useMemo(
-    () => (projectId ? loadCaptureMemory(projectId) : { location: '', trade: 'General' }),
+    () =>
+      projectId
+        ? loadCaptureMemory(projectId)
+        : { location: '', trade: 'General', assignee: '', assigneeEmail: '' },
     [projectId],
   )
 
@@ -30,6 +33,9 @@ export default function CaptureItem() {
   const [location, setLocation] = useState(memory.location)
   const [trade, setTrade] = useState(memory.trade)
   const [priority, setPriority] = useState<Priority>('medium')
+  const [assignee, setAssignee] = useState(memory.assignee)
+  const [assigneeEmail, setAssigneeEmail] = useState(memory.assigneeEmail)
+  const [dueDate, setDueDate] = useState('')
   const [geo, setGeo] = useState<Geo | null>(null)
   const [geoStatus, setGeoStatus] = useState<'locating' | 'ok' | 'off'>('locating')
   const [saving, setSaving] = useState(false)
@@ -126,15 +132,25 @@ export default function CaptureItem() {
       title: title.trim(),
       note: note.trim(),
       photoIds: photos.map((p) => p.id),
+      closePhotoIds: [],
       location: location.trim(),
       trade,
       priority,
       status: 'open',
+      assignee: assignee.trim(),
+      assigneeEmail: assigneeEmail.trim(),
+      dueDate: dueDate ? new Date(dueDate + 'T12:00:00').getTime() : undefined,
+      statusHistory: [{ status: 'open', at: now }],
       geo: geo ?? undefined,
       createdAt: now,
       updatedAt: now,
     })
-    saveCaptureMemory(projectId, { location: location.trim(), trade })
+    saveCaptureMemory(projectId, {
+      location: location.trim(),
+      trade,
+      assignee: assignee.trim(),
+      assigneeEmail: assigneeEmail.trim(),
+    })
     photos.forEach((p) => URL.revokeObjectURL(p.url))
     navigate(`/project/${projectId}`, { replace: true })
   }
@@ -247,6 +263,31 @@ export default function CaptureItem() {
           <span className="field-label">Priority</span>
           <PriorityChips value={priority} onChange={setPriority} />
         </div>
+
+        <div className="grid-2">
+          <label>
+            Assign to (sub)
+            <input
+              value={assignee}
+              onChange={(e) => setAssignee(e.target.value)}
+              placeholder="e.g. Ace Electric"
+            />
+          </label>
+          <label>
+            Due date
+            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </label>
+        </div>
+        <label>
+          Sub's email (to send their list)
+          <input
+            type="email"
+            inputMode="email"
+            value={assigneeEmail}
+            onChange={(e) => setAssigneeEmail(e.target.value)}
+            placeholder="optional — foreman@acetric.com"
+          />
+        </label>
 
         <div className="field">
           <DictateLabel caption="Notes" value={note} onChange={setNote} />

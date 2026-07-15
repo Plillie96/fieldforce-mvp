@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { listItems, listProjects, saveProject, uid } from '../db'
+import { importProject, listItems, listProjects, saveProject, uid } from '../db'
 import type { Project } from '../types'
 import { EmptyState } from '../components/ui'
 
@@ -15,6 +15,20 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
+  const importRef = useRef<HTMLInputElement>(null)
+
+  async function onImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    try {
+      const bundle = JSON.parse(await file.text())
+      await importProject(bundle)
+      refresh()
+    } catch {
+      alert('That doesn’t look like a Field Punch project file.')
+    }
+  }
 
   async function refresh() {
     const projects = await listProjects()
@@ -123,6 +137,15 @@ export default function Home() {
           </form>
         )}
       </div>
+
+      {!showForm && !loading && (
+        <div className="home-import">
+          <input ref={importRef} type="file" accept=".json,application/json" hidden onChange={onImport} />
+          <button className="link-btn" onClick={() => importRef.current?.click()}>
+            ⬇ Import a project file
+          </button>
+        </div>
+      )}
 
       {!showForm && (
         <button className="fab" onClick={() => setShowForm(true)} aria-label="New project">
