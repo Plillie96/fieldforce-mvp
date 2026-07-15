@@ -532,10 +532,17 @@ textarea {
   flex: 1;
 }
 .sticky-actions {
-  position: sticky;
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 640px;
   bottom: 0;
-  padding: 12px 0 calc(4px + var(--safe-bottom));
-  background: linear-gradient(to top, var(--bg) 70%, transparent);
+  padding: 12px 16px calc(12px + var(--safe-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+  z-index: 30;
 }
 
 /* ---- Photo capture ---- */

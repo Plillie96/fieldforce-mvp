@@ -11,7 +11,13 @@ import { usePhotoUrls } from '../usePhotoUrl'
 const STATUS_FLOW: Status[] = ['open', 'in_progress', 'done']
 
 function toDateInput(ts?: number): string {
-  return ts ? new Date(ts).toISOString().slice(0, 10) : ''
+  if (!ts) return ''
+  // Use LOCAL date parts (dueDate is stored as local noon) so the edit field
+  // matches what the detail/report show via toLocaleDateString.
+  const d = new Date(ts)
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${mm}-${dd}`
 }
 
 export default function ItemDetail() {
