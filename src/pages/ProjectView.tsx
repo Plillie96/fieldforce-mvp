@@ -4,6 +4,7 @@ import { deleteProject, exportProject, getProject, listItems } from '../db'
 import type { Project, PunchItem, Status } from '../types'
 import { isOverdue } from '../types'
 import { EmptyState, PriorityDot, StatusBadge, TopBar } from '../components/ui'
+import { ClipboardList, Dashboard, Download, FileText, ImageIcon, MapIcon, Plus, Trash } from '../components/icons'
 import { usePhotoUrl } from '../usePhotoUrl'
 
 async function downloadProject(projectId: string, name: string) {
@@ -26,7 +27,13 @@ function ItemThumb({ item }: { item: PunchItem }) {
   const url = usePhotoUrl(item.photoIds[0])
   return (
     <div className="thumb">
-      {url ? <img src={url} alt="" /> : <span className="thumb-placeholder">📷</span>}
+      {url ? (
+        <img src={url} alt="" />
+      ) : (
+        <span className="thumb-placeholder">
+          <ImageIcon />
+        </span>
+      )}
       {item.photoIds.length > 1 && <span className="thumb-count">{item.photoIds.length}</span>}
     </div>
   )
@@ -95,7 +102,7 @@ export default function ProjectView() {
         back="/"
         right={
           <button className="icon-btn" aria-label="Delete project" onClick={onDeleteProject}>
-            🗑
+            <Trash />
           </button>
         }
       />
@@ -117,23 +124,23 @@ export default function ProjectView() {
         {items.length > 0 && (
           <div className="project-actions grid-2">
             <Link to={`/project/${project.id}/dashboard`} className="action-tile">
-              📊 Dashboard
+              <Dashboard /> Dashboard
             </Link>
             <Link to={`/project/${project.id}/plan`} className="action-tile">
-              🗺️ Floor plan
+              <MapIcon /> Floor plan
             </Link>
             <Link to={`/project/${project.id}/report`} className="action-tile">
-              📄 Report
+              <FileText /> Report
             </Link>
             <button className="action-tile" onClick={() => downloadProject(project.id, project.name)}>
-              ⬆ Export
+              <Download /> Export
             </button>
           </div>
         )}
 
         {visible.length === 0 ? (
           <EmptyState
-            icon="📷"
+            icon={<ClipboardList />}
             title={items.length === 0 ? 'No punch items yet' : 'Nothing here'}
             hint={
               items.length === 0
@@ -147,7 +154,9 @@ export default function ProjectView() {
               <li key={item.id}>
                 <Link
                   to={`/project/${project.id}/item/${item.id}`}
-                  className={`card item-card ${item.status === 'done' ? 'is-done' : ''}`}
+                  className={`card item-card prio-edge-${item.priority} ${
+                    item.status === 'done' ? 'is-done' : ''
+                  }`}
                 >
                   <ItemThumb item={item} />
                   <div className="item-card-main">
@@ -176,7 +185,7 @@ export default function ProjectView() {
         onClick={() => navigate(`/project/${project.id}/capture`)}
         aria-label="Add punch item"
       >
-        <span className="fab-cam">＋</span>
+        <Plus />
       </button>
     </div>
   )

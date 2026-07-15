@@ -6,8 +6,14 @@ import { VitePWA } from 'vite-plugin-pwa'
 // project site under a subpath, change this to '/fieldforce-mvp/'.
 const BASE = '/'
 
+// Read an injected PORT without requiring @types/node in this config.
+const injectedPort = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process
+  ?.env?.PORT
+
 export default defineConfig({
   base: BASE,
+  // Honor a PORT injected by proxied dev/preview environments; fall back to Vite's default.
+  server: injectedPort ? { port: Number(injectedPort), strictPort: true } : undefined,
   plugins: [
     react(),
     VitePWA({
@@ -17,8 +23,8 @@ export default defineConfig({
         name: 'Field Punch',
         short_name: 'Field Punch',
         description: 'Capture site walk-through punch lists — photos, notes, and reports, offline.',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#1c1917',
+        background_color: '#171310',
         display: 'standalone',
         orientation: 'portrait',
         id: BASE,
@@ -31,7 +37,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         cleanupOutdatedCaches: true,
       },
     }),

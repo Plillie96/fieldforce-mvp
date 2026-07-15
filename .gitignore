@@ -6,3 +6,4 @@ dist-ssr
 .vite
 *.log
 npm-debug.log*
+.claude/
