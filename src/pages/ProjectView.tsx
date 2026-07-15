@@ -115,9 +115,12 @@ export default function ProjectView() {
 
       <div className="page-body">
         {items.length > 0 && (
-          <div className="project-actions">
+          <div className="project-actions grid-2">
             <Link to={`/project/${project.id}/dashboard`} className="action-tile">
               📊 Dashboard
+            </Link>
+            <Link to={`/project/${project.id}/plan`} className="action-tile">
+              🗺️ Floor plan
             </Link>
             <Link to={`/project/${project.id}/report`} className="action-tile">
               📄 Report

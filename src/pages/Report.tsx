@@ -6,7 +6,42 @@ import { formatCoords, mapsLink } from '../geo'
 import type { Priority, Project, PunchItem, Settings } from '../types'
 import { PRIORITY_LABEL, STATUS_LABEL, TRADES, isOverdue } from '../types'
 import { TopBar } from '../components/ui'
-import { usePhotoUrls } from '../usePhotoUrl'
+import { usePhotoUrl, usePhotoUrls } from '../usePhotoUrl'
+
+const PRIO_PIN: Record<Priority, string> = { high: 'pin-high', medium: 'pin-medium', low: 'pin-low' }
+
+function ReportPlan({
+  planPhotoId,
+  items,
+  numberOf,
+}: {
+  planPhotoId: string
+  items: PunchItem[]
+  numberOf: (id: string) => number
+}) {
+  const url = usePhotoUrl(planPhotoId)
+  const placed = items.filter((i) => i.pin)
+  if (!url || placed.length === 0) return null
+  return (
+    <section className="report-group report-plan-section">
+      <h2 className="report-group-head">
+        Floor plan <span>{placed.length} pinned</span>
+      </h2>
+      <div className="plan-wrap report-plan">
+        <img src={url} alt="Floor plan with item locations" />
+        {placed.map((it) => (
+          <span
+            key={it.id}
+            className={`map-pin ${PRIO_PIN[it.priority]} ${it.status === 'done' ? 'pin-done' : ''}`}
+            style={{ left: `${it.pin!.x * 100}%`, top: `${it.pin!.y * 100}%` }}
+          >
+            {numberOf(it.id)}
+          </span>
+        ))}
+      </div>
+    </section>
+  )
+}
 
 const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 }
 type GroupBy = 'area' | 'trade' | 'status' | 'assignee'
@@ -135,7 +170,9 @@ export default function Report() {
     day: 'numeric',
   })
 
-  let counter = 0
+  const order = groups.flatMap((g) => g.items)
+  const numberMap = new Map(order.map((it, i) => [it.id, i + 1]))
+  const numberOf = (id: string) => numberMap.get(id) ?? 0
 
   return (
     <div className="page report-page">
@@ -204,6 +241,10 @@ export default function Report() {
           <span className="report-tag prio-low">{stats.low} Low</span>
         </div>
 
+        {project.planPhotoId && (
+          <ReportPlan planPhotoId={project.planPhotoId} items={items} numberOf={numberOf} />
+        )}
+
         {items.length === 0 ? (
           <p className="muted">No items captured yet.</p>
         ) : (
@@ -212,10 +253,9 @@ export default function Report() {
               <h2 className="report-group-head">
                 {group.key} <span>{group.items.length}</span>
               </h2>
-              {group.items.map((item) => {
-                counter += 1
-                return <ReportRow key={item.id} item={item} index={counter} />
-              })}
+              {group.items.map((item) => (
+                <ReportRow key={item.id} item={item} index={numberOf(item.id)} />
+              ))}
             </section>
           ))
         )}

@@ -1406,6 +1406,88 @@ textarea {
   padding: 8px;
 }
 
+/* ---- Floor plan + pins ---- */
+.plan-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #fff;
+  line-height: 0;
+}
+.plan-wrap.placing {
+  cursor: crosshair;
+}
+.plan-wrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.map-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+  line-height: 1;
+  padding: 0;
+}
+.map-pin.pin-high {
+  background: var(--high);
+}
+.map-pin.pin-medium {
+  background: var(--medium);
+}
+.map-pin.pin-low {
+  background: var(--low);
+}
+.map-pin.pin-done {
+  background: var(--done);
+}
+.plan-arm-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #eff6ff;
+  border: 1px solid var(--brand);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+.plan-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 10px 0 14px;
+  font-size: 13px;
+}
+.plan-picker .field-label {
+  display: block;
+  margin-bottom: 8px;
+}
+.chip-placed {
+  border-color: var(--brand);
+}
+.report-plan {
+  margin-top: 8px;
+}
+.report-plan-section {
+  break-inside: avoid;
+}
+
 /* ---- Report verified badge ---- */
 .report-verified {
   margin-top: 6px;

@@ -90,14 +90,35 @@ export async function saveProject(project: Project): Promise<void> {
 
 export async function deleteProject(id: string): Promise<void> {
   const db = await getDB()
-  const items = await listItems(id)
+  const [project, items] = await Promise.all([getProject(id), listItems(id)])
   const tx = db.transaction(['projects', 'items', 'photos'], 'readwrite')
   await tx.objectStore('projects').delete(id)
+  if (project?.planPhotoId) await tx.objectStore('photos').delete(project.planPhotoId)
   for (const item of items) {
     await tx.objectStore('items').delete(item.id)
-    for (const pid of item.photoIds) await tx.objectStore('photos').delete(pid)
+    for (const pid of [...item.photoIds, ...(item.closePhotoIds ?? [])]) {
+      await tx.objectStore('photos').delete(pid)
+    }
   }
   await tx.done
+}
+
+/** Set (or replace) the project's floor-plan image. Returns the photo id. */
+export async function setProjectPlan(projectId: string, blob: Blob): Promise<string> {
+  const project = await getProject(projectId)
+  if (!project) throw new Error('Project not found')
+  const id = uid()
+  await savePhoto(id, blob)
+  if (project.planPhotoId) await deletePhoto(project.planPhotoId)
+  await saveProject({ ...project, planPhotoId: id })
+  return id
+}
+
+export async function removeProjectPlan(projectId: string): Promise<void> {
+  const project = await getProject(projectId)
+  if (!project?.planPhotoId) return
+  await deletePhoto(project.planPhotoId)
+  await saveProject({ ...project, planPhotoId: undefined })
 }
 
 // ---- Items ----
@@ -175,6 +196,7 @@ export async function exportProject(projectId: string): Promise<ProjectBundle> {
   if (!project) throw new Error('Project not found')
   const items = await listItems(projectId)
   const photoIds = new Set<string>()
+  if (project.planPhotoId) photoIds.add(project.planPhotoId)
   for (const item of items) {
     for (const id of item.photoIds) photoIds.add(id)
     for (const id of item.closePhotoIds) photoIds.add(id)
@@ -212,6 +234,7 @@ export async function importProject(bundle: ProjectBundle): Promise<string> {
     ...bundle.project,
     id: newProjectId,
     name: bundle.project.name + ' (imported)',
+    planPhotoId: bundle.project.planPhotoId ? photoIdMap.get(bundle.project.planPhotoId) : undefined,
     createdAt: Date.now(),
   })
 
