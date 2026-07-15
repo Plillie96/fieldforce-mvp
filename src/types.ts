@@ -5,7 +5,15 @@ export interface Project {
   id: string
   name: string
   address: string
+  /** Optional floor-plan image (key into the photos store) to pin items on. */
+  planPhotoId?: string
   createdAt: number
+}
+
+/** A pin location on the project's floor plan, normalized to 0..1 of width/height. */
+export interface Pin {
+  x: number
+  y: number
 }
 
 export interface Geo {
@@ -43,6 +51,8 @@ export interface PunchItem {
   statusHistory: StatusChange[]
   /** Where the item was captured, if location was available. */
   geo?: Geo
+  /** Pin location on the project floor plan (normalized), if placed. */
+  pin?: Pin
   createdAt: number
   updatedAt: number
 }

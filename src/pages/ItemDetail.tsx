@@ -259,6 +259,12 @@ export default function ItemDetail() {
               </details>
             )}
 
+            <button
+              className="btn ghost full"
+              onClick={() => navigate(`/project/${projectId}/plan?place=${item.id}`)}
+            >
+              {item.pin ? '📍 Re-pin on floor plan' : '🗺️ Pin on floor plan'}
+            </button>
             <button className="btn ghost full" onClick={() => setEditing(true)}>✎ Edit details</button>
           </div>
         )}
