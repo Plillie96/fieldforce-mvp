@@ -6,6 +6,7 @@ import { formatCoords, mapsLink } from '../geo'
 import type { PunchItem, Priority, Status } from '../types'
 import { STATUS_LABEL, daysOpen, isOverdue } from '../types'
 import { DictateLabel, PriorityChips, TopBar, TradeChips } from '../components/ui'
+import { PhotoAnnotator } from '../components/PhotoAnnotator'
 import { usePhotoUrls } from '../usePhotoUrl'
 
 const STATUS_FLOW: Status[] = ['open', 'in_progress', 'done']
@@ -25,6 +26,7 @@ export default function ItemDetail() {
   const navigate = useNavigate()
   const [item, setItem] = useState<PunchItem>()
   const [editing, setEditing] = useState(false)
+  const [annoIdx, setAnnoIdx] = useState<number | null>(null)
   const photoRef = useRef<HTMLInputElement>(null)
   const closeRef = useRef<HTMLInputElement>(null)
   const photoUrls = usePhotoUrls(item?.photoIds ?? [])
@@ -79,6 +81,18 @@ export default function ItemDetail() {
     await deletePhoto(id)
   }
 
+  async function saveMarkup(blob: Blob) {
+    if (!item || annoIdx === null) return
+    const oldId = item.photoIds[annoIdx]
+    const newId = uid()
+    await savePhoto(newId, blob)
+    const next = item.photoIds.slice()
+    next[annoIdx] = newId
+    await update({ photoIds: next })
+    await deletePhoto(oldId)
+    setAnnoIdx(null)
+  }
+
   async function onDelete() {
     if (!item) return
     if (!confirm('Delete this punch item?')) return
@@ -101,6 +115,14 @@ export default function ItemDetail() {
         }
       />
 
+      {annoIdx !== null && photoUrls[annoIdx] && (
+        <PhotoAnnotator
+          src={photoUrls[annoIdx]}
+          onSave={saveMarkup}
+          onCancel={() => setAnnoIdx(null)}
+        />
+      )}
+
       <div className="page-body">
         <input ref={photoRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => addPhotos(e, 'photoIds')} />
         <input ref={closeRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => addPhotos(e, 'closePhotoIds')} />
@@ -110,6 +132,9 @@ export default function ItemDetail() {
             {photoUrls.map((url, i) => (
               <div className="detail-photo" key={i}>
                 <img src={url} alt={`${item.title} photo ${i + 1}`} />
+                <button type="button" className="photo-markup" onClick={() => setAnnoIdx(i)}>
+                  ✏️ Markup
+                </button>
                 {editing && (
                   <button type="button" className="photo-remove" aria-label="Remove photo" onClick={() => removePhoto(item.photoIds[i], 'photoIds')}>
                     ×
