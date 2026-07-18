@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import type { Priority, Status } from '../types'
 import { PRIORITIES, PRIORITY_LABEL, STATUS_LABEL, TRADES } from '../types'
 import { useDictation } from '../useDictation'
+import { IconChevronLeft, IconMic } from './icons'
 
 export function PriorityChips({
   value,
@@ -72,7 +73,7 @@ export function TopBar({
           aria-label="Back"
           onClick={() => (typeof back === 'number' ? navigate(back) : navigate(back))}
         >
-          ‹
+          <IconChevronLeft size={22} />
         </button>
       )}
       <div className="topbar-titles">
@@ -138,7 +139,10 @@ export function DictateLabel({
               Listening… tap to stop
             </>
           ) : (
-            <>🎤 Speak</>
+            <>
+              <IconMic size={14} />
+              Speak
+            </>
           )}
         </button>
       )}
@@ -151,7 +155,7 @@ export function EmptyState({
   title,
   hint,
 }: {
-  icon: string
+  icon: React.ReactNode
   title: string
   hint?: string
 }) {

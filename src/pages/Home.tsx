@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { importProject, listItems, listProjects, saveProject, uid } from '../db'
 import type { Project } from '../types'
 import { EmptyState } from '../components/ui'
+import { IconClipboard, IconDownload, IconHardHat, IconSettings } from '../components/icons'
 
 interface ProjectRow extends Project {
   total: number
@@ -68,13 +69,15 @@ export default function Home() {
   return (
     <div className="page">
       <header className="hero">
-        <div className="hero-mark">FP</div>
+        <div className="hero-mark">
+          <IconHardHat size={26} strokeWidth={2.2} />
+        </div>
         <div className="hero-titles">
           <h1>Field Punch</h1>
           <p>Walk the site. Snap, speak, done.</p>
         </div>
         <Link to="/settings" className="hero-gear" aria-label="Company & report settings">
-          ⚙
+          <IconSettings size={20} />
         </Link>
       </header>
 
@@ -83,7 +86,7 @@ export default function Home() {
           <EmptyState icon="…" title="Loading" />
         ) : rows.length === 0 && !showForm ? (
           <EmptyState
-            icon="📋"
+            icon={<IconClipboard size={30} />}
             title="No projects yet"
             hint="Create a project for the site or building you're walking."
           />
@@ -150,7 +153,8 @@ export default function Home() {
         <div className="home-import">
           <input ref={importRef} type="file" accept=".json,application/json" hidden onChange={onImport} />
           <button className="link-btn" onClick={() => importRef.current?.click()}>
-            ⬇ Import a project file
+            <IconDownload size={15} />
+            Import a project file
           </button>
         </div>
       )}

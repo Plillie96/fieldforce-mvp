@@ -36,58 +36,33 @@ def blend(dst, src, a):
 
 
 def render(size):
+    """Navy tile with a yellow hard hat and a navy check on the dome."""
     s = size
-    g0, g1 = hex_rgb("#1e3a8a"), hex_rgb("#2563eb")
-    white = hex_rgb("#ffffff")
-    grey = hex_rgb("#cbd5e1")
-    green = hex_rgb("#16a34a")
-    blue = hex_rgb("#2563eb")
-    line_grey = hex_rgb("#94a3b8")
+    navy = hex_rgb("#0b2739")
+    yellow = hex_rgb("#ffb700")
 
-    px = [[(255, 255, 255) for _ in range(s)] for _ in range(s)]
+    px = [[navy for _ in range(s)] for _ in range(s)]
     U = s / 64.0  # design units -> pixels
 
-    # clipboard geometry (design units)
-    body = (16 * U, 12 * U, 48 * U, 52 * U, 4 * U)
-    clip = (24 * U, 8 * U, 40 * U, 16 * U, 2 * U)
-    checks = [
-        # (ax,ay,bx,by, midx,midy, color) two-segment check
-        (22, 26, 26, 30, 34, 21, green),
-        (22, 38, 26, 42, 34, 33, blue),
-    ]
-    lines = [(37, 24, 42, 24), (37, 36, 42, 36)]
+    dome_cx, dome_cy, dome_r = 32 * U, 42 * U, 15 * U
+    ridge = (29 * U, 21 * U, 35 * U, 31 * U, 3 * U)
+    brim = (11 * U, 42 * U, 53 * U, 49 * U, 3.5 * U)
+    # check: (26,37) -> (30,41) -> (38,33)
+    check = (26 * U, 37 * U, 30 * U, 41 * U, 38 * U, 33 * U)
+    check_w = 1.8 * U
 
     for y in range(s):
         for x in range(s):
-            # background rounded gradient
-            if rounded_rect_contains(x, y, 0, 0, s - 1, s - 1, 14 * U):
-                t = (x + y) / (2.0 * s)
-                col = tuple(int(round(lerp(g0[i], g1[i], t))) for i in range(3))
-            else:
-                continue  # leave transparent-ish white (icons are on square anyway)
-
-            # clipboard body
-            if rounded_rect_contains(x, y, *body):
-                col = white
-            # clip tab
-            if rounded_rect_contains(x, y, *clip):
-                col = grey
-
-            # check marks (only over white body)
-            aa = 1.6 * U
-            for ax, ay, mx, my, en_x, en_y, color in [
-                (c[0] * U, c[1] * U, c[2] * U, c[3] * U, c[4] * U, c[5] * U, c[6]) for c in checks
-            ]:
-                d = min(seg_dist(x, y, ax, ay, mx, my), seg_dist(x, y, mx, my, en_x, en_y))
-                if d <= aa:
-                    a = max(0.0, min(1.0, (aa - d) / (0.9 * U)))
-                    col = blend(col, color, a)
-            for lx0, ly0, lx1, ly1 in lines:
-                d = seg_dist(x, y, lx0 * U, ly0 * U, lx1 * U, ly1 * U)
-                if d <= 1.5 * U:
-                    a = max(0.0, min(1.0, (1.5 * U - d) / (0.9 * U)))
-                    col = blend(col, line_grey, a)
-
+            col = navy
+            in_dome = y <= dome_cy and (x - dome_cx) ** 2 + (y - dome_cy) ** 2 <= dome_r**2
+            if in_dome or rounded_rect_contains(x, y, *ridge) or rounded_rect_contains(x, y, *brim):
+                col = yellow
+                if in_dome:
+                    ax, ay, mx, my, bx, by = check
+                    d = min(seg_dist(x, y, ax, ay, mx, my), seg_dist(x, y, mx, my, bx, by))
+                    if d <= check_w:
+                        a = max(0.0, min(1.0, (check_w - d) / (0.9 * U)))
+                        col = blend(col, navy, a)
             px[y][x] = col
 
     return px

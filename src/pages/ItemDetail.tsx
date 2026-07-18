@@ -6,6 +6,7 @@ import { formatCoords, mapsLink } from '../geo'
 import type { PunchItem, Priority, Status } from '../types'
 import { STATUS_LABEL, daysOpen, isOverdue } from '../types'
 import { DictateLabel, PriorityChips, TopBar, TradeChips } from '../components/ui'
+import { IconCamera, IconCheck, IconMap, IconMapPin, IconPencil, IconPlus, IconTrash } from '../components/icons'
 import { PhotoAnnotator } from '../components/PhotoAnnotator'
 import { usePhotoUrls } from '../usePhotoUrl'
 
@@ -110,7 +111,7 @@ export default function ItemDetail() {
         back={`/project/${projectId}`}
         right={
           <button className="icon-btn" aria-label="Delete item" onClick={onDelete}>
-            🗑
+            <IconTrash size={18} />
           </button>
         }
       />
@@ -133,7 +134,7 @@ export default function ItemDetail() {
               <div className="detail-photo" key={i}>
                 <img src={url} alt={`${item.title} photo ${i + 1}`} />
                 <button type="button" className="photo-markup" onClick={() => setAnnoIdx(i)}>
-                  ✏️ Markup
+                  <IconPencil size={13} /> Markup
                 </button>
                 {editing && (
                   <button type="button" className="photo-remove" aria-label="Remove photo" onClick={() => removePhoto(item.photoIds[i], 'photoIds')}>
@@ -146,7 +147,7 @@ export default function ItemDetail() {
         )}
         {editing && (
           <button type="button" className="btn ghost full" onClick={() => photoRef.current?.click()}>
-            📷 Add photo
+            <IconCamera size={16} /> Add photo
           </button>
         )}
 
@@ -166,9 +167,9 @@ export default function ItemDetail() {
         {(item.status === 'done' || closeUrls.length > 0) && (
           <div className="close-photos">
             <div className="close-photos-head">
-              <span>✅ Completion photos</span>
+              <span><IconCheck size={15} /> Completion photos</span>
               <button type="button" className="btn ghost small" onClick={() => closeRef.current?.click()}>
-                ＋ Add
+                <IconPlus size={14} /> Add
               </button>
             </div>
             {closeUrls.length > 0 ? (
@@ -264,7 +265,7 @@ export default function ItemDetail() {
               {item.geo && (
                 <>
                   {' · '}
-                  <a href={mapsLink(item.geo)} target="_blank" rel="noreferrer">📍 {formatCoords(item.geo)}</a>
+                  <a href={mapsLink(item.geo)} target="_blank" rel="noreferrer"><IconMapPin size={12} /> {formatCoords(item.geo)}</a>
                 </>
               )}
               {item.closedAt && ` · Closed ${new Date(item.closedAt).toLocaleDateString()}`}
@@ -288,9 +289,11 @@ export default function ItemDetail() {
               className="btn ghost full"
               onClick={() => navigate(`/project/${projectId}/plan?place=${item.id}`)}
             >
-              {item.pin ? '📍 Re-pin on floor plan' : '🗺️ Pin on floor plan'}
+              {item.pin ? <><IconMapPin size={16} /> Re-pin on floor plan</> : <><IconMap size={16} /> Pin on floor plan</>}
             </button>
-            <button className="btn ghost full" onClick={() => setEditing(true)}>✎ Edit details</button>
+            <button className="btn ghost full" onClick={() => setEditing(true)}>
+              <IconPencil size={15} /> Edit details
+            </button>
           </div>
         )}
       </div>

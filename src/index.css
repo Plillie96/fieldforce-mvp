@@ -8,7 +8,7 @@
   --line: #e2e8ee;
   --brand: #16537e;
   --brand-ink: #ffffff;
-  --accent: #ffc528;
+  --accent: #ffb700;
   --accent-ink: #0b2739;
   --high: #dc2626;
   --medium: #d97706;
@@ -32,11 +32,24 @@ body,
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background: var(--bg);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   overscroll-behavior-y: none;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.015em;
+}
+
+button,
+a,
+.card {
+  -webkit-tap-highlight-color: transparent;
 }
 
 .app-shell {
@@ -65,7 +78,7 @@ body {
   align-items: center;
   gap: 14px;
   padding: calc(24px + var(--safe-top)) 20px 22px;
-  background: var(--navy);
+  background: linear-gradient(180deg, var(--navy-2), var(--navy));
   border-bottom: 4px solid var(--accent);
   color: #fff;
 }
@@ -166,9 +179,10 @@ body {
   text-decoration: none;
   color: inherit;
   padding: 14px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 .card:active {
-  transform: scale(0.995);
+  transform: scale(0.98);
 }
 
 .project-card {
@@ -257,8 +271,10 @@ body {
   object-fit: cover;
 }
 .thumb-placeholder {
-  font-size: 24px;
-  opacity: 0.5;
+  color: var(--muted);
+  opacity: 0.6;
+  display: grid;
+  place-items: center;
 }
 
 .muted {
@@ -269,8 +285,10 @@ body {
 /* ---- Badges / priority ---- */
 .badge {
   display: inline-block;
-  font-size: 11.5px;
-  font-weight: 650;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   padding: 3px 9px;
   border-radius: 999px;
   width: fit-content;
@@ -395,14 +413,15 @@ body {
   font-size: 30px;
   font-weight: 700;
   line-height: 1;
-  box-shadow: 0 6px 20px rgba(255, 197, 40, 0.55);
+  box-shadow: 0 6px 20px rgba(255, 183, 0, 0.5), 0 2px 6px rgba(11, 39, 57, 0.2);
   cursor: pointer;
   z-index: 20;
   display: grid;
   place-items: center;
+  transition: transform 0.12s ease;
 }
 .fab:active {
-  transform: scale(0.94);
+  transform: scale(0.92);
 }
 .fab-cam {
   font-size: 30px;
@@ -525,10 +544,18 @@ textarea {
 .btn {
   font: inherit;
   font-weight: 650;
-  border-radius: 11px;
+  border-radius: 12px;
   padding: 12px 18px;
   border: 1px solid transparent;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.btn:active {
+  transform: scale(0.97);
 }
 .btn.small {
   padding: 8px 14px;
@@ -538,6 +565,10 @@ textarea {
   background: var(--accent);
   color: var(--accent-ink);
   font-weight: 750;
+  box-shadow: 0 2px 10px rgba(255, 183, 0, 0.35);
+}
+.btn.primary:active {
+  filter: brightness(0.95);
 }
 .btn.primary:disabled {
   opacity: 0.6;
@@ -694,8 +725,14 @@ textarea {
   color: var(--muted);
 }
 .empty-icon {
-  font-size: 44px;
-  margin-bottom: 12px;
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: #e8edf3;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
 }
 .empty-title {
   font-size: 16px;
@@ -980,6 +1017,9 @@ textarea {
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .geo-locating {
   background: #fef3c7;
@@ -1076,6 +1116,9 @@ textarea {
 .saved-note {
   color: var(--done);
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* ---- Report: controls, brand, dashboard, groups, sign-off ---- */
@@ -1246,19 +1289,24 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 12px 8px;
+  gap: 7px;
+  padding: 13px 8px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  color: var(--brand);
+  box-shadow: var(--shadow);
+  color: var(--ink);
   font-weight: 650;
   font-size: 14px;
   text-decoration: none;
   cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.action-tile svg {
+  color: var(--brand);
 }
 .action-tile:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 /* ---- Badges: overdue ---- */
@@ -1293,6 +1341,11 @@ textarea {
   font-size: 14px;
   color: #15803d;
   margin-bottom: 8px;
+}
+.close-photos-head > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .close-hint {
   font-size: 13px;
@@ -1433,6 +1486,9 @@ textarea {
   font-size: 14px;
   cursor: pointer;
   padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* ---- Photo markup / annotator ---- */
@@ -1448,6 +1504,9 @@ textarea {
   font-size: 12.5px;
   font-weight: 650;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 .annotator {
   position: fixed;
@@ -1624,6 +1683,13 @@ textarea {
   font-size: 12.5px;
   font-weight: 650;
   color: #15803d;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.detail-stamp svg,
+.report-item-meta svg {
+  vertical-align: -2px;
 }
 
 /* ---- Print ---- */
