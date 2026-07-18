@@ -4,6 +4,7 @@ import { getProject, listItems, removeProjectPlan, saveItem, setProjectPlan } fr
 import { compressImage } from '../image'
 import type { Priority, Project, PunchItem } from '../types'
 import { EmptyState, TopBar } from '../components/ui'
+import { IconCircle, IconMap, IconMapPin, IconTrash } from '../components/icons'
 import { usePhotoUrl } from '../usePhotoUrl'
 
 const PRIO_CLASS: Record<Priority, string> = { high: 'pin-high', medium: 'pin-medium', low: 'pin-low' }
@@ -80,7 +81,7 @@ export default function PlanView() {
         right={
           project.planPhotoId ? (
             <button className="icon-btn" aria-label="Remove plan" onClick={onRemovePlan}>
-              🗑
+              <IconTrash size={18} />
             </button>
           ) : undefined
         }
@@ -91,7 +92,7 @@ export default function PlanView() {
       {!project.planPhotoId ? (
         <div className="page-body">
           <EmptyState
-            icon="🗺️"
+            icon={<IconMap size={30} />}
             title="No floor plan yet"
             hint="Upload a plan or sketch, then drop a pin on each item so the office sees exactly where every issue is."
           />
@@ -146,7 +147,7 @@ export default function PlanView() {
                     className={`chip-pick ${armed === it.id ? 'picked' : ''} ${it.pin ? 'chip-placed' : ''}`}
                     onClick={() => setArmed(armed === it.id ? null : it.id)}
                   >
-                    {it.pin ? '📍' : '◦'} #{numberOf(it.id)} {it.title || 'Untitled'}
+                    {it.pin ? <IconMapPin size={13} /> : <IconCircle size={11} />} #{numberOf(it.id)} {it.title || 'Untitled'}
                   </button>
                 ))}
               </div>

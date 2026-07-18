@@ -10,6 +10,7 @@ import Report from './pages/Report'
 import Dashboard from './pages/Dashboard'
 import PlanView from './pages/PlanView'
 import SettingsPage from './pages/Settings'
+import '@fontsource-variable/inter'
 import './index.css'
 
 const router = createHashRouter([

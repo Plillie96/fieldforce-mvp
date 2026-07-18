@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { loadSettings, saveSettings } from '../db'
 import { compressImage } from '../image'
 import { TopBar } from '../components/ui'
+import { IconCheck } from '../components/icons'
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -78,7 +79,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {saved && <p className="saved-note">✓ Saved</p>}
+        {saved && <p className="saved-note"><IconCheck size={14} /> Saved</p>}
       </div>
     </div>
   )

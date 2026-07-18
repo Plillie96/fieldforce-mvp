@@ -6,6 +6,7 @@ import { getCurrentLocation, reverseGeocode } from '../geo'
 import { parseSpokenItem } from '../parse'
 import type { Geo, Priority } from '../types'
 import { DictateLabel, PriorityChips, TopBar, TradeChips } from '../components/ui'
+import { IconCamera, IconMapPin, IconMic, IconPlus } from '../components/icons'
 import { useDictation } from '../useDictation'
 
 interface DraftPhoto {
@@ -177,7 +178,7 @@ export default function CaptureItem() {
             onClick={() => fileRef.current?.click()}
           >
             <span className="photo-cta">
-              <span className="photo-cam">📷</span>
+              <span className="photo-cam"><IconCamera size={38} strokeWidth={1.7} /></span>
               Take photo
             </span>
           </button>
@@ -202,7 +203,7 @@ export default function CaptureItem() {
               onClick={() => fileRef.current?.click()}
               aria-label="Add another photo"
             >
-              ＋
+              <IconPlus size={20} />
               <span>Add</span>
             </button>
           </div>
@@ -221,7 +222,10 @@ export default function CaptureItem() {
                 Listening… tap to finish
               </>
             ) : (
-              <>🎙️ Speak the whole item</>
+              <>
+                <IconMic size={18} />
+                Speak the whole item
+              </>
             )}
           </button>
         )}
@@ -242,9 +246,10 @@ export default function CaptureItem() {
           <div className="label-row">
             <span className="field-label">Location / area</span>
             <span className={`geo-chip geo-${geoStatus}`}>
-              {geoStatus === 'locating' && '📍 locating…'}
-              {geoStatus === 'ok' && '📍 GPS tagged'}
-              {geoStatus === 'off' && '📍 no GPS'}
+              <IconMapPin size={12} />
+              {geoStatus === 'locating' && 'locating…'}
+              {geoStatus === 'ok' && 'GPS tagged'}
+              {geoStatus === 'off' && 'no GPS'}
             </span>
           </div>
           <input
@@ -294,7 +299,7 @@ export default function CaptureItem() {
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Tap 🎤 Speak and describe it — details, measurements, who's responsible…"
+            placeholder="Tap Speak and describe it — details, measurements, who's responsible…"
             rows={3}
           />
         </div>

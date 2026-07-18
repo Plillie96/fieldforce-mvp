@@ -6,6 +6,7 @@ import { formatCoords, mapsLink } from '../geo'
 import type { Priority, Project, PunchItem, Settings } from '../types'
 import { PRIORITY_LABEL, STATUS_LABEL, TRADES, isOverdue } from '../types'
 import { TopBar } from '../components/ui'
+import { IconCheck, IconDownload, IconMapPin } from '../components/icons'
 import { usePhotoUrl, usePhotoUrls } from '../usePhotoUrl'
 
 const PRIO_PIN: Record<Priority, string> = { high: 'pin-high', medium: 'pin-medium', low: 'pin-low' }
@@ -107,14 +108,14 @@ function ReportRow({ item, index }: { item: PunchItem; index: number }) {
             <>
               {' · '}
               <a href={mapsLink(item.geo)} target="_blank" rel="noreferrer">
-                📍 {formatCoords(item.geo)}
+                <IconMapPin size={12} /> {formatCoords(item.geo)}
               </a>
             </>
           )}
         </div>
         {item.note && <p className="report-item-note">{item.note}</p>}
         {item.closePhotoIds.length > 0 && (
-          <div className="report-verified">✅ Verified complete ({item.closePhotoIds.length} photo{item.closePhotoIds.length > 1 ? 's' : ''})</div>
+          <div className="report-verified"><IconCheck size={13} /> Verified complete ({item.closePhotoIds.length} photo{item.closePhotoIds.length > 1 ? 's' : ''})</div>
         )}
       </div>
     </div>
@@ -200,7 +201,7 @@ export default function Report() {
             ))}
           </div>
           <button className="btn ghost small" onClick={() => downloadCsv(project, items)}>
-            ⬇ CSV
+            <IconDownload size={14} /> CSV
           </button>
         </div>
       </div>

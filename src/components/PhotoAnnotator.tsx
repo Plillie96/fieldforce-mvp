@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
+import { IconArrowUpRight, IconCircle, IconPencil } from './icons'
 
 type Tool = 'arrow' | 'oval' | 'pen'
 interface Point {
@@ -12,10 +14,10 @@ interface Shape {
 }
 
 const COLORS = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#ffffff']
-const TOOLS: Array<{ id: Tool; icon: string; label: string }> = [
-  { id: 'arrow', icon: '↗', label: 'Arrow' },
-  { id: 'oval', icon: '◯', label: 'Circle' },
-  { id: 'pen', icon: '✎', label: 'Draw' },
+const TOOLS: Array<{ id: Tool; icon: ReactNode; label: string }> = [
+  { id: 'arrow', icon: <IconArrowUpRight size={19} />, label: 'Arrow' },
+  { id: 'oval', icon: <IconCircle size={18} />, label: 'Circle' },
+  { id: 'pen', icon: <IconPencil size={17} />, label: 'Draw' },
 ]
 
 function drawShape(ctx: CanvasRenderingContext2D, s: Shape, w: number) {
